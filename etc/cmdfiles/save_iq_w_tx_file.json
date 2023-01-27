@@ -11,7 +11,7 @@
     "txrate": 250e3,
     "txfreq": 3455e6,
     "txgain": {"fixed": 27.0},
-    "txsamps": {"file": "/local/repository/shout/signal_library/16PSK_sps2/QPSK_signal_2023_01_18_neal.iq"},
+    "txsamps": {"file": "/local/repository/shout/signal_library/QPSK_signal_2023_01_18_neal.iq"},
     "txwait": 3,
     "use_lo_offset": true,
 

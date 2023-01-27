@@ -13,7 +13,7 @@ for i in $(eval echo "{$START..$REPEAT}")
 do
 	#for CMD in "save_iq_w_simult_tx_1" "save_iq_w_simult_tx_2" "save_iq_w_simult_tx_3"
 	#for CMD in "save_iq_w_simult_tx_2" "save_iq_w_simult_tx_3"
-	for CMD in "save_iq_w_tx_cw"
+	for CMD in "save_iq_w_tx_file"
 	do
 	
 		today=$(date +"%m-%d-%Y")
