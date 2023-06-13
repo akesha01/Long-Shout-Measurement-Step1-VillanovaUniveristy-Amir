@@ -130,7 +130,6 @@ import geni.rspec.igext as ig
 import geni.rspec.emulab.route as route
 
 
-
 # Global Variables
 meas_disk_image = \
         "urn:publicid:IDN+emulab.net+image+PowderTeam:U18-GR-PBUF"
@@ -139,12 +138,8 @@ x310_node_image = meas_disk_image
 nuc_image = meas_disk_image
 sm_image = meas_disk_image
 
-#b210_setup_cmd = "/local/repository/bin/setup_b210.sh"
-#x310_setup_cmd = "/local/repository/bin/setup_x310.sh"
-#orch_setup_cmd = "/local/repository/bin/install_gps.sh"
-
-# List of CBRS rooftop X310 radios.
-cbrs_radios = [
+# List of CBAND rooftop X310 radios.
+cband_radios = [
     ("cbrssdr1-bes",
      "Behavioral"),
     ("cbrssdr1-browning",
@@ -212,47 +207,8 @@ fe_sites = [
 ]
 
 # A list of mobile endpoint sites.
-me_sites = [ ("All", "All"),
-    ('urn:publicid:IDN+bus-4208.powderwireless.net+authority+cm',
-     "Bus4208"),
-    ('urn:publicid:IDN+bus-4329.powderwireless.net+authority+cm',
-     "Bus4329"),
-    ('urn:publicid:IDN+bus-4330.powderwireless.net+authority+cm',
-     "Bus4330"),
-    ('urn:publicid:IDN+bus-4407.powderwireless.net+authority+cm',
-     "Bus4407"),
-    ('urn:publicid:IDN+bus-4408.powderwireless.net+authority+cm',
-     "Bus4408"),
-    ('urn:publicid:IDN+bus-4409.powderwireless.net+authority+cm',
-     "Bus4409"),
-    ('urn:publicid:IDN+bus-4410.powderwireless.net+authority+cm',
-     "Bus4410"),
-    ('urn:publicid:IDN+bus-4555.powderwireless.net+authority+cm',
-     "Bus4555"),
-    ('urn:publicid:IDN+bus-4603.powderwireless.net+authority+cm',
-     "Bus4603"),
-    ('urn:publicid:IDN+bus-4604.powderwireless.net+authority+cm',
-     "Bus4604"),
-    ('urn:publicid:IDN+bus-4734.powderwireless.net+authority+cm',
-     "Bus4734"),
-    ('urn:publicid:IDN+bus-4817.powderwireless.net+authority+cm',
-     "Bus4817"),
-    ('urn:publicid:IDN+bus-4964.powderwireless.net+authority+cm',
-     "Bus4964"),
-    ('urn:publicid:IDN+bus-5175.powderwireless.net+authority+cm',
-     "Bus5175"),
-    ('urn:publicid:IDN+bus-6180.powderwireless.net+authority+cm',
-     "Bus6180"),
-    ('urn:publicid:IDN+bus-6181.powderwireless.net+authority+cm',
-     "Bus6181"),
-    ('urn:publicid:IDN+bus-6182.powderwireless.net+authority+cm',
-     "Bus6182"),
-    ('urn:publicid:IDN+bus-6183.powderwireless.net+authority+cm',
-     "Bus6183"),
-    ('urn:publicid:IDN+bus-6185.powderwireless.net+authority+cm',
-     "Bus6185"),
-    ('urn:publicid:IDN+bus-6186.powderwireless.net+authority+cm',
-     "Bus6186"),
+me_sites = [
+    ("All", "All"),
 ]
 
 # List of OTA lab X310 radios.
@@ -302,9 +258,7 @@ dense_radios = [
 freq_ranges = {
     "ISM-900": [914.87, 915.13],
     "ISM-2400": [2400.00, 2483.50],
-    "BAND7-U": [2500.00, 2570.00], 
-    "BAND7-D": [2620.00, 2690.00],
-    "CBRS": [3550.00, 3700.00], 
+    "CBAND": [3550.00, 3700.00], 
     "ISM-5800": [5725.00, 5850.00]
 }
 
@@ -313,19 +267,22 @@ datasets = {
     "ADSBRecordings": "urn:publicid:IDN+emulab.net:powdersandbox+stdataset+ADSBrecordings"
 }
 
-
 # Top-level request object.
 request = portal.context.makeRequestRSpec()
-request.initVNC()
 
 # Helper function that allocates a PC + X310 radio pair, with Ethernet
 # link between them.
-def x310_node_pair(x310_radio_name, node_type):
+def x310_node_pair(x310_radio_name, node_type, start_vnc = False, ignore_isbw = False):
     radio_link = request.Link("%s-link" % x310_radio_name)
+    radio_link.bandwidth = 10*1000*1000 # 10Gbps expressed in Kbps
+    if ignore_isbw:
+        radio_link.best_effort = True
 
     node = request.RawPC("%s-comp" % x310_radio_name)
     node.hardware_type = node_type
     node.disk_image = x310_node_image
+    if start_vnc:
+        node.startVNC()
 
     #node.addService(rspec.Execute(shell="bash",command=x310_setup_cmd))
 
@@ -386,7 +343,6 @@ def connect_to_dataset(node, dataset_name):
     fslink.vlan_tagging = True
 
 
-
 # Node type parameter for PCs to be paired with X310 radios.
 # Restricted to those that are known to work well with them.
 portal.context.defineParameter(
@@ -413,18 +369,6 @@ portal.context.defineParameter(
     ["SpectSet","ADSBRecordings","None"],
     "Name of the remote dataset to connect with orch",
 )
-
-
-# Node type for the orchestrator.
-"""portal.context.defineParameter(
-    "phantomnet",
-    "PhantomNet radios and links to allocate",
-    portal.ParameterType.STRING, "None",
-    ["None", "nuc1-nuc2", "nuc2-nuc3", "nuc3-nuc4", "nuc1-nuc4", "nuc5-nuc6", "nuc1-nuc2-nuc3", "nuc1-nuc4-nuc3", "nuc1-nuc2-nuc3-nuc4-nuc1"],
-    "PhantomNet radios and links to allocate",
-)"""
-
-
 
 # Set of Mobile Endpoint devices to allocate
 portal.context.defineStructParameter(
@@ -458,7 +402,6 @@ portal.context.defineStructParameter(
         ),
     ])
 
-
 # Set of Fixed Endpoint devices to allocate (nuc2)
 portal.context.defineStructParameter(
     "fe_radio_sites_nuc2", "Fixed Endpoint Sites", [],
@@ -475,22 +418,21 @@ portal.context.defineStructParameter(
         ),
     ])
 
-# Set of CBRS X310 radios to allocate
+# Set of CBAND X310 radios to allocate
 portal.context.defineStructParameter(
-    "cbrs_radio_sites", "CBRS Radio Sites", [],
+    "cband_radio_sites", "CBAND Radio Sites", [],
     multiValue=True,
     min=0,
-    multiValueTitle="CBRS X310 radios.",
+    multiValueTitle="CBAND X310 radios.",
     members=[
         portal.Parameter(
             "radio",
-            "CBRS Radio Site",
+            "CBAND Radio Site",
             portal.ParameterType.STRING,
-            cbrs_radios[0], cbrs_radios,
-            longDescription="CBRS X310 radio will be allocated from selected site."
+            cband_radios[0], cband_radios,
+            longDescription="CBAND X310 radio will be allocated from selected site."
         ),
     ])
-
 
 # Set of Fixed Endpoint devices to allocate (nuc1)
 portal.context.defineStructParameter(
@@ -524,7 +466,6 @@ portal.context.defineStructParameter(
         ),
     ])
 
-
 # Set of OTA Lab NUC+B210 devices to allocate
 portal.context.defineStructParameter(
     "ota_lab_b210s", "OTA Lab B210 Radios", [],
@@ -541,6 +482,7 @@ portal.context.defineStructParameter(
         ),
     ])
 
+# Set of Dense Deployment radio sites to allocate
 portal.context.defineStructParameter(
     "dense_radios", "Dense Site Radios", [],
     multiValue=True,
@@ -574,79 +516,32 @@ portal.context.defineStructParameter(
         ),
     ])
 
+### Frequency/spectrum parameters
 
-# Frequency/spectrum parameters
+# CBAND
 portal.context.defineStructParameter(
-    "cbrs_freq_ranges", "CBRS Frequency Ranges", [],
+    "cband_freq_ranges", "CBAND Frequency Ranges", [],
     multiValue=True,
     min=0,
-    multiValueTitle="Frequency ranges for CBRS operation.",
+    multiValueTitle="Frequency ranges for CBAND operation.",
     members=[
         portal.Parameter(
             "freq_min",
             "Frequency Min",
             portal.ParameterType.BANDWIDTH,
-            freq_ranges["CBRS"][0],
+            freq_ranges["CBAND"][0],
             longDescription="Values are rounded to the nearest kilohertz."
         ),
         portal.Parameter(
             "freq_max",
             "Frequency Max",
             portal.ParameterType.BANDWIDTH,
-            freq_ranges["CBRS"][0] + 10.0,
+            freq_ranges["CBAND"][0] + 10.0,
             longDescription="Values are rounded to the nearest kilohertz."
         ),
     ])
 
-
-"""
-portal.context.defineStructParameter(
-    "b7_dl_freq_ranges", "Band 7 Downlink Frequency Ranges", [],
-    multiValue=True,
-    min=0,
-    multiValueTitle="Frequency ranges for Band 7 Downlink cellular operation.",
-    members=[
-        portal.Parameter(
-            "freq_min",
-            "Downlink Frequency Min",
-            portal.ParameterType.BANDWIDTH,
-            freq_ranges["BAND7-D"][0],
-            longDescription="Values are rounded to the nearest kilohertz."
-        ),
-        portal.Parameter(
-            "freq_max",
-            "Downlink Frequency Max",
-            portal.ParameterType.BANDWIDTH,
-            freq_ranges["BAND7-D"][0]+10.0,
-            longDescription="Values are rounded to the nearest kilohertz."
-        ),
-    ])
-
-portal.context.defineStructParameter(
-    "b7_ul_freq_ranges", "Band 7 Uplink Frequency Ranges", [],
-    multiValue=True,
-    min=0,
-    multiValueTitle="Frequency ranges for Band 7 Uplink cellular operation.",
-    members=[
-        portal.Parameter(
-            "freq_min",
-            "Uplink Frequency Min",
-            portal.ParameterType.BANDWIDTH,
-            freq_ranges["BAND7-U"][0],
-            longDescription="Values are rounded to the nearest kilohertz."
-        ),
-        portal.Parameter(
-            "freq_max",
-            "Uplink Frequency Max",
-            portal.ParameterType.BANDWIDTH,
-            freq_ranges["BAND7-U"][0]+10.0,
-            longDescription="Values are rounded to the nearest kilohertz."
-        ),
-    ])
-"""
-
-
-
+# ISM - 900MHz
 portal.context.defineStructParameter(
     "ism900_freq_ranges", "ISM-900 Frequency Ranges", [],
     multiValue=True,
@@ -668,6 +563,8 @@ portal.context.defineStructParameter(
             longDescription="Values are rounded to the nearest kilohertz."
         ),
     ])
+
+# ISM - 2400MHz
 portal.context.defineStructParameter(
     "ism2400_freq_ranges", "ISM-2400 Frequency Ranges", [],
     multiValue=True,
@@ -690,39 +587,29 @@ portal.context.defineStructParameter(
         ),
     ])
 
+# Start VNC?
+portal.context.defineParameter("start_vnc",
+                               "Start X11 VNC on all compute nodes",
+                               portal.ParameterType.BOOLEAN, True)
+
+# Start VNC?
+portal.context.defineParameter("ignore_isbw",
+                               "Ignore interswitch bandwith limitations on radio-to-compute links. (Do not use unless you have a specific reason to do so.)",
+                               portal.ParameterType.BOOLEAN, False,
+                               advanced=True)
 
 # Bind and verify parameters
 params = portal.context.bindParameters()
 
-
-for i, frange in enumerate(params.cbrs_freq_ranges):
+for i, frange in enumerate(params.cband_freq_ranges):
     if frange.freq_min < 3400 or frange.freq_min > 3800 \
        or frange.freq_max < 3400 or frange.freq_max > 3800:
-        perr = portal.ParameterError("CBRS frequencies must be between 3400 and 3800 MHz", ["cbrs_freq_ranges[%d].freq_min" % i, "cbrs_freq_ranges[%d].freq_max" % i])
+        perr = portal.ParameterError("CBAND frequencies must be between 3358 and 3700 MHz", ["cband_freq_ranges[%d].freq_min" % i, "cband_freq_ranges[%d].freq_max" % i])
         portal.context.reportError(perr)
     if frange.freq_max - frange.freq_min < 1:
-        perr = portal.ParameterError("Minimum and maximum frequencies must be separated by at least 1 MHz", ["cbrs_freq_ranges[%d].freq_min" % i, "cbrs_freq_ranges[%d].freq_max" % i])
+        perr = portal.ParameterError("Minimum and maximum frequencies must be separated by at least 1 MHz", ["cband_freq_ranges[%d].freq_min" % i, "cband_freq_ranges[%d].freq_max" % i])
         portal.context.reportError(perr)
-"""
-for i, frange in enumerate(params.b7_ul_freq_ranges):
-    if frange.freq_min < 2500 or frange.freq_min > 2570 \
-       or frange.freq_max < 2500 or frange.freq_max > 2570:
-        perr = portal.ParameterError("Band 7 uplink frequencies must be between 2500 and 2570 MHz", ["b7_ul_freq_ranges[%d].freq_min" % i, "b7_ul_freq_ranges[%d].freq_max" % i])
-        portal.context.reportError(perr)
-    if frange.freq_max - frange.freq_min < 1:
-        perr = portal.ParameterError("Minimum and maximum frequencies must be separated by at least 1 MHz", ["b7_ul_freq_ranges[%d].freq_min" % i, "b7_ul_freq_ranges[%d].freq_max" % i])
-        portal.context.reportError(perr)
-    
 
-for i, frange in enumerate(params.b7_dl_freq_ranges):
-    if frange.freq_min < 2620 or frange.freq_min > 2690 \
-       or frange.freq_max < 2620 or frange.freq_max > 2690:
-        perr = portal.ParameterError("Band 7 downlink frequencies must be between 2620 and 2690 MHz", ["b7_dl_freq_ranges[%d].freq_min" % i, "b7_dl_freq_ranges[%d].freq_max" % i])
-        portal.context.reportError(perr)
-    if frange.freq_max - frange.freq_min < 1:
-        perr = portal.ParameterError("Minimum and maximum frequencies must be separated by at least 1 MHz", ["b7_dl_freq_ranges[%d].freq_min" % i, "b7_dl_freq_ranges[%d].freq_max" % i])
-        portal.context.reportError(perr)
-"""
 for i, frange in enumerate(params.ism900_freq_ranges):
     if frange.freq_min < freq_ranges["ISM-900"][0] or frange.freq_min > freq_ranges["ISM-900"][1] \
        or frange.freq_max < freq_ranges["ISM-900"][0] or frange.freq_max > freq_ranges["ISM-900"][1]:
@@ -741,18 +628,22 @@ for i, frange in enumerate(params.ism2400_freq_ranges):
         perr = portal.ParameterError("Minimum and maximum frequencies must be separated by at least 1 MHz", ["ism2400_freq_ranges[%d].freq_min" % i, "ism2400_freq_ranges[%d].freq_max" % i])
         portal.context.reportError(perr)
 
-
 # Now verify.
 portal.context.verifyParameters()
+
+# Declare that we may be starting X11 VNC on the compute nodes.
+if params.start_vnc:
+    request.initVNC()
 
 # Allocate orchestrator node
 if params.orchtype != "None":
     orch = request.RawPC("orch")
     orch.disk_image = orch_image
     orch.hardware_type = params.orchtype
+    if params.start_vnc:
+        orch.startVNC()
     if params.dataset != "None": 
         connect_to_dataset(orch, params.dataset)
-    #orch.addService(rspec.Execute(shell="bash", command=orch_setup_cmd))
 
 # Request PhantomNet radios
 for dev in params.phantomnet:
@@ -767,6 +658,8 @@ for dev in params.phantomnet:
         node.hardware_type = "nuc5300"
         node.component_id = node_name
         node.disk_image = meas_disk_image
+        if params.start_vnc:
+            node.startVNC()
         nodes.append(node)
 
     if n_nodes == 2:
@@ -822,21 +715,17 @@ for dev in params.phantomnet:
         rflink3.addInterface(node3if1)
         rflink3.addInterface(node0if1)
 
-        
-    
-
-# Request PC + CBRS X310 resource pairs.
-for rsite in params.cbrs_radio_sites:
-    x310_node_pair(rsite.radio, params.nodetype)
+# Request PC + CBAND X310 resource pairs.
+for rsite in params.cband_radio_sites:
+    x310_node_pair(rsite.radio, params.nodetype, params.start_vnc, params.ignore_isbw)
 
 # Request PC + Cellular X310 resource pairs.
 for rsite in params.cell_radio_sites:
-    x310_node_pair(rsite.radio, params.nodetype)
+    x310_node_pair(rsite.radio, params.nodetype, params.start_vnc, params.ignore_isbw)
 
 # Request PC + OTA Lab X310 resource pairs.
 for dev in params.ota_lab_x310s:
-    x310_node_pair(dev.radio, params.nodetype)
-
+    x310_node_pair(dev.radio, params.nodetype, params.start_vnc, params.ignore_isbw)
 
 # Request nuc1+B210 radio resources at FE sites.
 for fesite in params.fe_radio_sites_nuc1:
@@ -848,8 +737,8 @@ for fesite in params.fe_radio_sites_nuc1:
     nuc.component_manager_id = fesite.site
     nuc.component_id = "nuc1"
     nuc.disk_image = nuc_image
-    nuc.startVNC()
-    #nuc.addService(rspec.Execute(shell="bash", command=b210_setup_cmd))
+    if params.start_vnc:
+        nuc.startVNC()
 
 # Request nuc2+B210 radio resources at FE sites.
 for fesite in params.fe_radio_sites_nuc2:
@@ -861,16 +750,16 @@ for fesite in params.fe_radio_sites_nuc2:
     nuc.component_manager_id = fesite.site
     nuc.component_id = "nuc2"
     nuc.disk_image = nuc_image
-    nuc.startVNC()
-    #nuc.addService(rspec.Execute(shell="bash", command=b210_setup_cmd))
-
+    if params.start_vnc:
+        nuc.startVNC()
 
 # Request ed1+B210 radio resources at ME sites.
 for mesite in params.me_radio_sites:
     if mesite.site == "All":
         obj = request.requestAllRoutes()
         obj.disk_image = nuc_image
-        obj.startVNC()
+        if params.start_vnc:
+            obj.startVNC()
     else:
         node = ""
         for urn,sname in me_sites:
@@ -886,27 +775,21 @@ for dev in params.dense_radios:
     node = request.RawPC("%s-dd-b210" % dev.device)
     node.component_id = dev.device
     node.disk_image = sm_image
-    node.startVNC()
-
+    if params.start_vnc:
+        node.startVNC()
  
 # Request NUC+B210 radio resources in the OTA Lab.
 for dev in params.ota_lab_b210s:
     node = request.RawPC("%s-b210" % dev.device)
     node.component_id = dev.device
     node.disk_image = sm_image
-    #node.addService(rspec.Execute(shell="bash",
-    #     
+    if params.start_vnc:
+        node.startVNC()
 
 # Request frequency range(s)
-for frange in params.cbrs_freq_ranges:
-    request.requestSpectrum(frange.freq_min, frange.freq_max, 0)
-""" 
-for frange in params.b7_ul_freq_ranges:
+for frange in params.cband_freq_ranges:
     request.requestSpectrum(frange.freq_min, frange.freq_max, 0)
 
-for frange in params.b7_dl_freq_ranges:
-    request.requestSpectrum(frange.freq_min, frange.freq_max, 0)
-"""
 for frange in params.ism900_freq_ranges:
     request.requestSpectrum(frange.freq_min, frange.freq_max, 0)
 

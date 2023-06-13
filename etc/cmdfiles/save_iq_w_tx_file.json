@@ -6,22 +6,22 @@
 
     "nsamps": 8192,
 
-    "wotxrepeat": 100,
+    "wotxrepeat": 0,
     
-    "txrate": 1e6,
-    "txfreq": 3611.5e6,
-    "txgain": {"fixed": 28.0},
-    "txsamps": {"file": "/local/repository/shout/signals/16PSK_sps2/iq"},
-    "txwait": 30,
+    "txrate": 250e3,
+    "txfreq": 3455e6,
+    "txgain": {"fixed": 27.0},
+    "txsamps": {"file": "/local/repository/shout/signal_library/QPSK_signal_2023_01_18_neal.iq"},
+    "txwait": 3,
     "use_lo_offset": true,
 
-    "rxrate": 10e6,
-    "rxfreq": 3610e6,
+    "rxrate": 250e3,
+    "rxfreq": 3455e6,
     "rxgain": {"fixed": 30.0},
-    "rxrepeat": 100,
+    "rxrepeat": 4,
     "rxwait": {"min": 50, "max": 2000, "res": "ms"},
 
-    "txclients": ["cbrssdr1-smt-comp", "cbrssdr1-hospital-comp", "cbrssdr1-honors-comp", "cbrssdr1-ustar-comp", "cbrssdr1-bes-comp"],
-    "rxclients": ["cbrssdr1-smt-comp", "cbrssdr1-hospital-comp", "cbrssdr1-honors-comp", "cbrssdr1-ustar-comp", "cbrssdr1-bes-comp"]
+    "txclients": ["cbrssdr1-browning-comp", "cbrssdr1-fm-comp", "cbrssdr1-smt-comp", "cbrssdr1-hospital-comp", "cbrssdr1-honors-comp", "cbrssdr1-ustar-comp", "cbrssdr1-bes-comp"],
+    "rxclients": ["cbrssdr1-browning-comp", "cbrssdr1-fm-comp", "cbrssdr1-smt-comp", "cbrssdr1-hospital-comp", "cbrssdr1-honors-comp", "cbrssdr1-ustar-comp", "cbrssdr1-bes-comp"]
  }
 ]
