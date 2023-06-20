@@ -4,6 +4,7 @@ import datetime
 import numpy as np
 import argparse
 import os
+import matplotlib.pyplot as plt
 
 class Radio():
     RX_CLEAR_COUNT = 1000
@@ -11,9 +12,10 @@ class Radio():
 
     def __init__(self) -> None:
         self.usrp = uhd.usrp.MultiUSRP()
-        self.usrp.set_rx_antenna("TX/RX")
+        self.usrp.set_rx_antenna("RX2")
         stream_args = uhd.usrp.StreamArgs("fc32", "sc16")
-        stream_args.channel = 0
+        stream_args.channels = [0]
+        self.channel = 0
         self.rxstreamer = self.usrp.get_rx_stream(stream_args)
 
     def _flush_rxstreamer(self):
@@ -32,7 +34,7 @@ class Radio():
             if metadata.error_code != uhd.types.RXMetadataErrorCode.none:
                 print(metadata.strerror())
 
-    def tune(self, freq, gain, rate, use_lo_offset, gpiomode):
+    def tune(self, freq, gain, rate, use_lo_offset=False, gpiomode=None):
         # Set GPIO pins if provided
         if gpiomode is not None:
             self.usrp.set_gpio_attr("FP0", "CTRL", 0)
@@ -43,11 +45,9 @@ class Radio():
         if rate:
             self.currate = rate
 
-            # self.logger.debug("Setting master clock rate = %f" %(rate*2))
             # self.usrp.set_master_clock_rate(rate*2)
-            self.logger.debug("Setting tx rate = %f" %rate)
+            print("Setting tx/rx rate = %f" %rate)
             self.usrp.set_tx_rate(rate, self.channel)
-            self.logger.debug("Setting rx rate = %f" %rate)
             self.usrp.set_rx_rate(rate, self.channel)
 
 
@@ -80,7 +80,7 @@ class Radio():
             self._flush_rxstreamer()
 
         # Create the array to hold the return samples.
-        samples = np.empty((1, nsamps), dtype=np.complex64)
+        samples = np.empty((1, int(nsamps)), dtype=np.complex64)
 
         # For collecting metadata from radio command (i.e., errors, etc.)
         metadata = uhd.types.RXMetadata()
@@ -99,13 +99,6 @@ class Radio():
             sleep_time = start_time - time.time()
             if sleep_time > 0:
                 time.sleep(sleep_time)
-            else:
-                self.logger.info("Late: %f" % sleep_time)
-
-        if self.external_clock:
-            self._synchronize()
-            rx_stream_cmd.stream_now = False     # To handle set_start_time(uhd.time_spec(start))
-            rx_stream_cmd.time_spec = uhd.types.TimeSpec(self.WAIT_TIME) # To handle set_start_time(uhd.time_spec(start)) 
 
         # Set up rx stream 
         self.rxstreamer.issue_stream_cmd(rx_stream_cmd)
@@ -115,7 +108,7 @@ class Radio():
         recv_samps = 0
         t = 0 # For debugging
         while recv_samps < nsamps:
-            samps = self.rxstreamer.recv(recv_buffer, metadata, self.WAIT_TIME+2)
+            samps = self.rxstreamer.recv(recv_buffer, metadata, 0.1)
 
             if metadata.error_code != uhd.types.RXMetadataErrorCode.none:
                 print(metadata.strerror())
@@ -136,24 +129,34 @@ class Radio():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--frequency", help="Frequency to receive samples", type=float)
-    parser.add_argument("-g", "--gain", help="Rx gain in dB", type=float)
-    parser.add_argument("-r", "--rate", help="Rx sample rate", type=float)
-    parser.add_argument("-n", "--nsamps", help="Number of samples to receive", default=1e4, type=int)
+    parser.add_argument("-f", "--frequency", help="Frequency to receive samples", default=3560e6, type=float)
+    parser.add_argument("-g", "--gain", help="Rx gain in dB", default=70, type=float)
+    parser.add_argument("-r", "--rate", help="Rx sample rate", default=15e6, type=float)
+    parser.add_argument("-n", "--nsamps", help="Number of samples to receive", default=10000, type=int)
     parser.add_argument("-w", "--sample_wait", help="Time between samples", default=2, type=float)
-    parser.add_argument("-o", "--output_dir", help="Frequency to receive samples", default="", type=str)
+    parser.add_argument("-o", "--output_dir", help="Frequency to receive samples", default='slc_prop_meas', type=str)
     parser.add_argument("-l", "--use_lo_offset", help="Use low offset", default=False, type=bool)
+
+    return parser.parse_args()
 
 def main():
     args = parse_args()
     radio = Radio()
 
     # tune radio
-    radio.tune(args.freq, args.gain, args.rate, use_lo_offset=False)
+    radio.tune(args.frequency, args.gain, args.rate, use_lo_offset=args.use_lo_offset)
 
     start_time = time.time()
+    folder_name = datetime.datetime.now().strftime("samples_%Y%m%d-%H%M%S")
+    folder_name = os.path.join(args.output_dir, folder_name)
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    print('Saving results in ', folder_name)
     while(True):
         start_time = start_time + args.sample_wait
         samps, dt = radio.recv_samples(args.nsamps, start_time)
         filename = dt.strftime("%Y%m%d-%H%M%S.%f-IQ.npy")
-        np.save(os.path.join(args.output_dir, filename), samps)
+        np.save(os.path.join(folder_name, filename), samps)
+
+if __name__ == "__main__":
+    main()
