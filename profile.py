@@ -576,14 +576,14 @@ portal.context.defineStructParameter(
             "Frequency Min",
             portal.ParameterType.BANDWIDTH,
             freq_ranges["ISM-2400"][0],
-            longDescription="Values are rounded to the nearest kilohertz."
+            longDescription="Values must be in MHz and are rounded to the nearest kilohertz."
         ),
         portal.Parameter(
             "freq_max",
             "Frequency Max",
             portal.ParameterType.BANDWIDTH,
             freq_ranges["ISM-2400"][0] + 10.0,
-            longDescription="Values are rounded to the nearest kilohertz."
+            longDescription="Values must be in MHz and are rounded to the nearest kilohertz."
         ),
     ])
 
@@ -602,8 +602,8 @@ portal.context.defineParameter("ignore_isbw",
 params = portal.context.bindParameters()
 
 for i, frange in enumerate(params.cband_freq_ranges):
-    if frange.freq_min < 3400 or frange.freq_min > 3800 \
-       or frange.freq_max < 3400 or frange.freq_max > 3800:
+    if frange.freq_min < 3358 or frange.freq_min > 3700 \
+       or frange.freq_max < 3358 or frange.freq_max > 3700:
         perr = portal.ParameterError("CBAND frequencies must be between 3358 and 3700 MHz", ["cband_freq_ranges[%d].freq_min" % i, "cband_freq_ranges[%d].freq_max" % i])
         portal.context.reportError(perr)
     if frange.freq_max - frange.freq_min < 1:
