@@ -258,7 +258,7 @@ dense_radios = [
 freq_ranges = {
     "ISM-900": [914.87, 915.13],
     "ISM-2400": [2400.00, 2483.50],
-    "CBAND": [3550.00, 3700.00], 
+    "CBAND": [3358.00, 3600.00], 
     "ISM-5800": [5725.00, 5850.00]
 }
 
@@ -602,8 +602,8 @@ portal.context.defineParameter("ignore_isbw",
 params = portal.context.bindParameters()
 
 for i, frange in enumerate(params.cband_freq_ranges):
-    if frange.freq_min < 3400 or frange.freq_min > 3800 \
-       or frange.freq_max < 3400 or frange.freq_max > 3800:
+    if frange.freq_min < freq_ranges["CBAND"][0] or frange.freq_min > freq_ranges["CBAND"][1] \
+       or frange.freq_max < freq_ranges["CBAND"][0] or frange.freq_max > freq_ranges["CBAND"][1]:
         perr = portal.ParameterError("CBAND frequencies must be between 3358 and 3700 MHz", ["cband_freq_ranges[%d].freq_min" % i, "cband_freq_ranges[%d].freq_max" % i])
         portal.context.reportError(perr)
     if frange.freq_max - frange.freq_min < 1:
