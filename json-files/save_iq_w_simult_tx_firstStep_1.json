@@ -1,0 +1,30 @@
+[
+ {
+     "cmd": "save_iq_w_simul_tx",
+     "sync": true,
+     "timeout": 10,
+
+     "nsamps": 1024,
+
+     "wotxrepeat": 5,
+     
+     "txgain": {"start": 44.0, "end": 56.0, "step": 2.0},
+     "txgaindiff": 0,
+     "txsignals": [ "/local/repository/shout/signal_library/PSK4_0.5_4_10_scaled.iq", "PAM_signal.iq"],
+     "txguard": 0e6,
+     "txcount": 2,
+     "txsetupcount": 50,
+     "txoverlap": false,
+     "txwait": 20,
+     
+
+     "rxrate": 25e6,
+     "rxfreq": 3363e6,
+     "rxgain": {"fixed": 30.0},
+     "rxrepeat": 5,
+     "rxwait": {"min": 10, "max": 90, "res": "ms"},
+
+     "txclients": ["cnode-ebc-dd-b210", "cnode-ustar-dd-b210"],
+     "rxclients": ["cnode-wasatch-dd-b210"]
+ }
+]
