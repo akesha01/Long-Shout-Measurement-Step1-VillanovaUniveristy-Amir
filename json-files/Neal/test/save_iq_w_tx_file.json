@@ -1,0 +1,23 @@
+[
+ {
+    "cmd": "save_iq_w_tx",
+    "sync": true,
+    "timeout": 30,
+    "nsamps": 8192,
+    "wotxrepeat": 1,
+    "txrate": 0.25e6,
+    "txfreq": 3363.0e6,
+    "txgain": {"fixed": 80.0},
+    "txsamps": {"file": "/local/repository/shout/signal_library/QPSK_signal_2023_01_18_neal.iq"},
+    "txwait": 3,
+    "use_lo_offset": true,
+    "rxrate": 0.25e6,
+    "rxfreq": 3363.0e6,
+    "rxgain": {"fixed": 70.0},
+    "rxrepeat": 4,
+    "rxwait": {"min": 50, "max": 2000, "res": "ms"},
+    "txclients": ["cnode-wasatch-dd-b210", "cnode-ebc-dd-b210", "cnode-ustar-dd-b210"],
+    "rxclients": ["cnode-wasatch-dd-b210", "cnode-ebc-dd-b210", "cnode-ustar-dd-b210"]
+
+ }
+]

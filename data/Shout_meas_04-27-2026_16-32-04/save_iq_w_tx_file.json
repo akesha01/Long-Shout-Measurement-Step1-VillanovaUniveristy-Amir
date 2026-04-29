@@ -1,0 +1,22 @@
+[
+ {
+    "cmd": "save_iq_w_tx",
+    "sync": true,
+    "timeout": 30,
+    "nsamps": 8192,
+    "wotxrepeat": 1,
+    "txrate": 0.25e6,
+    "txfreq": 3363e6,
+    "txgain": {"fixed": 27.0},
+    "txsamps": {"file": "PAM_signal.iq"},
+    "txwait": 3,
+    "use_lo_offset": true,
+    "rxrate": 0.25e6,
+    "rxfreq": 3363e6,
+    "rxgain": {"fixed": 30.0},
+    "rxrepeat": 1,
+    "rxwait": {"min": 50, "max": 2000, "res": "ms"},
+    "txclients": ["cnode-ebc-dd-b210", "cnode-ustar-dd-b210"],
+    "rxclients": ["cnode-wasatch-dd-b210"]
+ }
+]
